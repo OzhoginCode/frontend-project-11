@@ -19,11 +19,18 @@
     <br>
     <div class="row">
       <div class="col-8">
-        <form class="d-flex form">
-          <input type="text" class="form-control me-3" aria-label="Default" placeholder="Ссылка RSS">
-          <button class="btn btn-primary">Добавить</button>
+        <form class="d-flex form novalidate" id="add-rss-form">
+          <div class="form-floating me-3 w-100">
+            <input id="url-input" class="form-control" placeholder="Ссылка RSS" required>
+            <label for="url-input">Ссылка RSS</label>
+          </div>
+          <button id="submit-button" class="btn btn-primary btn-lg" type="submit">Добавить</button>
         </form>
+        <p id="input-error" class="position-absolute text-danger"></p>
       </div>
+    </div>
+    <div class="row">
+      <div class="mt-5" id="rss-list-container"></div>
     </div>
   </div>
 </main>
