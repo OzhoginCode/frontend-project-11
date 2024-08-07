@@ -43,7 +43,7 @@ const handleChangeRssList = (elements, urls) => {
   input.focus();
 };
 
-const render = (elements) => (path, value) => {
+const render = (elements, i18nInstance) => (path, value) => {
   switch (path) {
     case 'process.processState':
       handleProcessState(elements, value);
@@ -55,10 +55,11 @@ const render = (elements) => (path, value) => {
 
     case 'form.valid':
       elements.input.classList.toggle('is-invalid', !value);
+      elements.inputError.classList.toggle('d-none', value);
       break;
 
     case 'form.error':
-      elements.inputError.innerHTML = value;
+      elements.inputError.innerHTML = i18nInstance.t(`validationError.${value}`);
       break;
 
     case 'rssList':

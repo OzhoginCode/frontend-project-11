@@ -3,10 +3,10 @@ import { string } from 'yup';
 const validateUrl = (url, list) => {
   const schema = string()
     .required()
-    .url('Ссылка должна быть валидным URL')
+    .url('mustBeUrl')
     .test(
       'is-unique',
-      'RSS уже существует',
+      'mustBeUnique',
       (value) => !list.includes(value),
     );
 

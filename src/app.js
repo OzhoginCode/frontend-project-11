@@ -1,9 +1,19 @@
+import i18n from 'i18next';
 import onChange from 'on-change';
+
+import resources from './locales/index.js';
 
 import render from './render.js';
 import validateUrl from './validateUrl.js';
 
 const app = () => {
+  const i18nInstance = i18n.createInstance();
+  i18nInstance.init({
+    lng: 'ru',
+    debug: true,
+    resources,
+  });
+
   const elements = {
     form: document.getElementById('add-rss-form'),
     input: document.getElementById('url-input'),
@@ -24,7 +34,7 @@ const app = () => {
     rssList: [],
   };
 
-  const state = onChange(initState, render(elements));
+  const state = onChange(initState, render(elements, i18nInstance));
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -37,8 +47,8 @@ const app = () => {
         if (valid) {
           state.rssList.push(elements.input.value);
         }
-        state.form.valid = valid;
         state.form.error = error;
+        state.form.valid = valid;
         state.process.processState = 'filling';
       });
   });
