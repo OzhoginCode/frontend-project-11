@@ -1,18 +1,21 @@
-import { string } from 'yup';
+import { setLocale, string } from 'yup';
+
+setLocale({
+  string: {
+    url: 'mustBeUrl',
+  },
+  mixed: {
+    notOneOf: 'mustBeUnique',
+  },
+});
 
 const validateUrl = (url, list) => {
   const schema = string()
     .required()
-    .url('mustBeUrl')
-    .test(
-      'is-unique',
-      'mustBeUnique',
-      (value) => !list.includes(value),
-    );
+    .url()
+    .notOneOf(list);
 
-  return schema.validate(url)
-    .then(() => ({ valid: true, error: null }))
-    .catch((error) => ({ valid: false, error: error.errors[0] }));
+  return schema.validate(url);
 };
 
 export default validateUrl;
