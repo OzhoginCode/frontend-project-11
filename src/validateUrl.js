@@ -5,6 +5,7 @@ setLocale({
     url: 'mustBeUrl',
   },
   mixed: {
+    required: 'mustBeFilled',
     notOneOf: 'mustBeUnique',
   },
 });
