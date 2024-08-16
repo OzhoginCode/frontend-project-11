@@ -72,7 +72,9 @@ const app = () => {
     state.form.valid = true;
     state.process.processError = null;
 
-    validateUrl(value, state.feeds)
+    const existingUrls = state.feeds.map((feed) => feed.url);
+
+    validateUrl(value, existingUrls)
       .then(() => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(value)}`))
       .then((data) => {
         const parsed = parseRss(data.data.contents);
