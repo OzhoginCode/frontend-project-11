@@ -8,6 +8,20 @@ import render from './render.js';
 import validateUrl from './validateUrl.js';
 import parseRss from './parseRss.js';
 
+let currentFeedId = 0;
+
+const genFeedId = () => {
+  currentFeedId += 1;
+  return currentFeedId;
+};
+
+let currentPostId = 0;
+
+const genPostId = () => {
+  currentPostId += 1;
+  return currentPostId;
+};
+
 const app = () => {
   const i18nInstance = i18n.createInstance();
   i18nInstance.init({
@@ -23,6 +37,10 @@ const app = () => {
     feedback: document.getElementById('feedback'),
     feedsContainer: document.getElementById('rss-feeds-container'),
     postsContainer: document.getElementById('rss-posts-container'),
+    modal: document.getElementById('modal'),
+    modalTitle: document.getElementById('modal-title'),
+    modalText: document.getElementById('modal-text'),
+    modalLink: document.getElementById('modal-link'),
   };
 
   const initState = {
@@ -33,12 +51,18 @@ const app = () => {
     form: {
       valid: true,
     },
-    rssList: [],
+    modal: {
+      state: 'closed',
+      postId: null,
+    },
     posts: [],
     feeds: [],
+    ui: {
+      watchesPostsIds: [],
+    },
   };
 
-  const state = onChange(initState, render(elements, i18nInstance));
+  const state = onChange(initState, render(elements, i18nInstance, initState));
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -48,14 +72,24 @@ const app = () => {
     state.form.valid = true;
     state.process.processError = null;
 
-    validateUrl(value, state.rssList)
+    validateUrl(value, state.feeds)
       .then(() => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(value)}`))
       .then((data) => {
         const parsed = parseRss(data.data.contents);
+
+        const feedId = genFeedId();
+
+        const feed = {
+          feedId,
+          url: value,
+          ...parsed.feed,
+        };
+        state.feeds = [feed, ...state.feeds];
+
+        const posts = parsed.posts.map((post) => ({ ...post, feedId, id: genPostId() }));
+        state.posts = [...posts, ...state.posts];
+
         state.form.valid = true;
-        state.rssList.push(value);
-        state.feeds.push(parsed.feed);
-        state.posts.push(...parsed.posts);
         state.process.processState = 'success';
       })
       .catch((error) => {
@@ -69,6 +103,50 @@ const app = () => {
         state.process.processState = 'filling';
       });
   });
+
+  elements.modal.addEventListener('show.bs.modal', (e) => {
+    const { postId } = e.relatedTarget.dataset;
+    const id = parseInt(postId, 10);
+
+    state.modal.postId = id;
+    state.modal.state = 'opened';
+
+    if (!state.ui.watchesPostsIds.includes(id)) {
+      state.ui.watchesPostsIds.push(id);
+    }
+  });
+
+  const updateRss = () => {
+    const { feeds } = state;
+
+    const queries = feeds.map(({ url, feedId }) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+      .then((data) => ({ data, feedId })));
+
+    Promise.all(queries)
+      .then((results) => {
+        results.forEach(({ data, feedId }) => {
+          const { posts } = parseRss(data.data.contents);
+
+          const postNames = state.posts
+            .filter((post) => post.feedId === feedId)
+            .map((post) => post.title);
+
+          const newPosts = posts
+            .filter(({ title }) => !postNames.includes(title))
+            .map((post) => ({ ...post, feedId, id: genPostId() }));
+
+          state.posts = [...newPosts, ...state.posts];
+        });
+      })
+      .catch((error) => {
+        console.log(`Unexpected RSS refresh error: ${error}`);
+      })
+      .finally(() => {
+        setTimeout(updateRss, 5000);
+      });
+  };
+
+  updateRss();
 };
 
 export default app;

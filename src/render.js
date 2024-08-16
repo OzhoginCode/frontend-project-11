@@ -1,6 +1,8 @@
 const handleProcessState = (elements, processState, i18nInstance) => {
   switch (processState) {
     case 'filling':
+      elements.input.value = '';
+      elements.input.focus();
       elements.feedback.classList.remove('d-none');
       elements.submitButton.disabled = false;
       break;
@@ -11,6 +13,8 @@ const handleProcessState = (elements, processState, i18nInstance) => {
       break;
 
     case 'success':
+      elements.input.value = '';
+      elements.input.focus();
       elements.feedback.classList.remove('d-none');
       elements.submitButton.disabled = false;
       elements.feedback.innerHTML = i18nInstance.t('feedback.success');
@@ -19,13 +23,6 @@ const handleProcessState = (elements, processState, i18nInstance) => {
     default:
       throw new Error(`Unknown process state: ${processState}`);
   }
-};
-
-const handleChangeRssList = (elements) => {
-  const { input } = elements;
-
-  input.value = '';
-  input.focus();
 };
 
 const renderFeeds = (elements, feeds, i18nInstance) => {
@@ -66,7 +63,18 @@ const renderFeeds = (elements, feeds, i18nInstance) => {
   feedsContainer.appendChild(ul);
 };
 
-const renderPosts = (elements, posts, i18nInstance) => {
+const renderModal = (elements, value, state) => {
+  const { modalTitle, modalText, modalLink } = elements;
+
+  const post = state.posts.find(({ id }) => id === value);
+  const { title, description, link } = post;
+
+  modalTitle.textContent = title;
+  modalText.textContent = description;
+  modalLink.setAttribute('href', link);
+};
+
+const renderPosts = (elements, posts, i18nInstance, state) => {
   const { postsContainer } = elements;
 
   if (!posts.length) {
@@ -80,7 +88,9 @@ const renderPosts = (elements, posts, i18nInstance) => {
   const ul = document.createElement('ul');
   ul.classList.add('list-group');
 
-  const postsList = posts.map(({ title, link }) => {
+  const postsList = posts.map(({ title, link, id }) => {
+    const isWatched = state.ui.watchesPostsIds.includes(id);
+
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'd-flex', 'justify-content-between');
 
@@ -88,11 +98,17 @@ const renderPosts = (elements, posts, i18nInstance) => {
     linkEl.textContent = title;
     linkEl.setAttribute('href', link);
     linkEl.setAttribute('target', '_blank');
-    linkEl.classList.add('fw-bold');
+
+    const classNames = isWatched ? ['fw-normal', 'link-secondary'] : ['fw-bold'];
+    linkEl.classList.add(...classNames);
 
     const btn = document.createElement('button');
     btn.textContent = i18nInstance.t('buttons.viewPost');
     btn.classList.add('btn', 'btn-outline-primary');
+    btn.setAttribute('data-bs-toggle', 'modal');
+    btn.setAttribute('data-bs-target', '#modal');
+    btn.setAttribute('data-post-id', id);
+    btn.setAttribute('type', 'button');
 
     li.appendChild(linkEl);
     li.appendChild(btn);
@@ -107,7 +123,7 @@ const renderPosts = (elements, posts, i18nInstance) => {
   postsContainer.appendChild(ul);
 };
 
-const render = (elements, i18nInstance) => (path, value) => {
+const render = (elements, i18nInstance, state) => (path, value) => {
   switch (path) {
     case 'process.processState':
       handleProcessState(elements, value, i18nInstance);
@@ -123,8 +139,8 @@ const render = (elements, i18nInstance) => (path, value) => {
       elements.input.classList.toggle('is-invalid', !value);
       break;
 
-    case 'rssList':
-      handleChangeRssList(elements);
+    case 'modal.postId':
+      renderModal(elements, value, state);
       break;
 
     case 'feeds':
@@ -132,7 +148,11 @@ const render = (elements, i18nInstance) => (path, value) => {
       break;
 
     case 'posts':
-      renderPosts(elements, value, i18nInstance);
+      renderPosts(elements, value, i18nInstance, state);
+      break;
+
+    case 'ui.watchesPostsIds':
+      renderPosts(elements, state.posts, i18nInstance, state);
       break;
 
     default:
