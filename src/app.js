@@ -5,8 +5,8 @@ import onChange from 'on-change';
 import resources from './locales/index.js';
 
 import render from './render.js';
-import validateUrl from './validateUrl.js';
-import parseRss from './parseRss.js';
+import validateUrl from './tools/validateUrl.js';
+import parseRss from './tools/parseRss.js';
 
 let currentFeedId = 0;
 
@@ -129,12 +129,12 @@ const app = () => {
         results.forEach(({ data, feedId }) => {
           const { posts } = parseRss(data.data.contents);
 
-          const postNames = state.posts
+          const existingPostTitles = state.posts
             .filter((post) => post.feedId === feedId)
             .map((post) => post.title);
 
           const newPosts = posts
-            .filter(({ title }) => !postNames.includes(title))
+            .filter(({ title }) => !existingPostTitles.includes(title))
             .map((post) => ({ ...post, feedId, id: genPostId() }));
 
           state.posts = [...newPosts, ...state.posts];
