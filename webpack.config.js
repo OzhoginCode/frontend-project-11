@@ -7,7 +7,16 @@ export default {
       {
         test: /\.scss$/,
         use: [
-          'style-loader', 'css-loader', 'sass-loader',
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              sassOptions: {
+                quietDeps: true, // Отключение предупреждений из зависимостей
+              },
+            },
+          },
         ],
       },
     ],
