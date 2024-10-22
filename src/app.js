@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import axios from 'axios';
 import onChange from 'on-change';
-import { uniq } from 'lodash';
+import { uniqueId } from 'lodash';
 
 import resources from './locales/index.js';
 
@@ -66,7 +66,7 @@ const app = () => {
       .then((data) => {
         const parsed = parseRss(data.data.contents);
 
-        const feedId = uniq();
+        const feedId = uniqueId();
 
         const feed = {
           feedId,
@@ -75,7 +75,7 @@ const app = () => {
         };
         state.feeds = [feed, ...state.feeds];
 
-        const posts = parsed.posts.map((post) => ({ ...post, feedId, id: uniq() }));
+        const posts = parsed.posts.map((post) => ({ ...post, feedId, id: uniqueId() }));
         state.posts = [...posts, ...state.posts];
 
         state.form.valid = true;
@@ -95,13 +95,12 @@ const app = () => {
 
   elements.modal.addEventListener('show.bs.modal', (e) => {
     const { postId } = e.relatedTarget.dataset;
-    const id = parseInt(postId, 10);
 
-    state.modal.postId = id;
+    state.modal.postId = postId;
     state.modal.state = 'opened';
 
-    if (!state.ui.watchesPostsIds.includes(id)) {
-      state.ui.watchesPostsIds.push(id);
+    if (!state.ui.watchesPostsIds.includes(postId)) {
+      state.ui.watchesPostsIds.push(postId);
     }
   });
 
@@ -122,7 +121,7 @@ const app = () => {
 
           const newPosts = posts
             .filter(({ title }) => !existingPostTitles.includes(title))
-            .map((post) => ({ ...post, feedId, id: uniq() }));
+            .map((post) => ({ ...post, feedId, id: uniqueId() }));
 
           state.posts = [...newPosts, ...state.posts];
         });
