@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+
 const handleProcessState = (elements, processState, i18nInstance) => {
   switch (processState) {
     case 'filling':
