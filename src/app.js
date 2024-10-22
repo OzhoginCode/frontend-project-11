@@ -1,26 +1,13 @@
 import i18n from 'i18next';
 import axios from 'axios';
 import onChange from 'on-change';
+import { uniq } from 'lodash';
 
 import resources from './locales/index.js';
 
 import render from './render.js';
 import validateUrl from './tools/validateUrl.js';
 import parseRss from './tools/parseRss.js';
-
-let currentFeedId = 0;
-
-const genFeedId = () => {
-  currentFeedId += 1;
-  return currentFeedId;
-};
-
-let currentPostId = 0;
-
-const genPostId = () => {
-  currentPostId += 1;
-  return currentPostId;
-};
 
 const app = () => {
   const i18nInstance = i18n.createInstance();
@@ -79,7 +66,7 @@ const app = () => {
       .then((data) => {
         const parsed = parseRss(data.data.contents);
 
-        const feedId = genFeedId();
+        const feedId = uniq();
 
         const feed = {
           feedId,
@@ -88,7 +75,7 @@ const app = () => {
         };
         state.feeds = [feed, ...state.feeds];
 
-        const posts = parsed.posts.map((post) => ({ ...post, feedId, id: genPostId() }));
+        const posts = parsed.posts.map((post) => ({ ...post, feedId, id: uniq() }));
         state.posts = [...posts, ...state.posts];
 
         state.form.valid = true;
@@ -135,7 +122,7 @@ const app = () => {
 
           const newPosts = posts
             .filter(({ title }) => !existingPostTitles.includes(title))
-            .map((post) => ({ ...post, feedId, id: genPostId() }));
+            .map((post) => ({ ...post, feedId, id: uniq() }));
 
           state.posts = [...newPosts, ...state.posts];
         });
